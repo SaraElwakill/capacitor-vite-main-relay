@@ -2,66 +2,32 @@ import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import "./App.css";
 import { IonButton, IonContent, IonPage } from "@ionic/react";
-import fetchGraphQL from "./fetchGraphQL";
+import { graphql, loadQuery, usePreloadedQuery } from "react-relay";
+// import { AppQuery } from "./__generated__/AppQuery.graphql";
+import RelayEnvironment from "./RelayEnvironment";
+
+console.log(import.meta.env.VITE_REACT_APP_GITHUB_AUTH_TOKEN);
+
+const RepositoryNameQuery = graphql`
+	query AppRepositoryNameQuery {
+		repository(owner: "facebook", name: "relay") {
+			name
+		}
+	}
+`;
+const preloadedQuery = loadQuery(RelayEnvironment, RepositoryNameQuery, {
+	/* query variables */
+});
+
 function App() {
 	const [count, setCount] = useState(0);
 	const [name, setName] = useState(null);
-	const key = import.meta.env.VITE_REACT_APP_GITHUB_AUTH_TOKEN;
-	console.log(key);
+
+	const data = usePreloadedQuery(RepositoryNameQuery, preloadedQuery);
+	console.log(data);
 	useEffect(() => {
-		let isMounted = true;
-		fetchGraphQL(`
-	  query RepositoryNameQuery {
-	    repository(owner: "facebook" name: "relay") {
-	      name
-	    }
-	  }
-	`)
-			.then((response) => {
-				// Avoid updating state if the component unmounted before the fetch completes
-				console.log("here2");
-				if (!isMounted) {
-					return;
-				}
-				const data = response.data;
-				setName(data.repository.name);
-			})
-			.catch((error) => {
-				console.error(error);
-			});
-
-		return () => {
-			isMounted = false;
-		};
-	}, []);
-
-	// useEffect(async () => {
-	// 	console.log("here");
-	// 	let isMounted = true;
-	// 	fetchGraphQL(`
-	//   query RepositoryNameQuery {
-	//     repository(owner: "facebook" name: "relay framework") {
-	//       name
-	//     }
-	//   }
-	// `)
-	// 		.then((response) => {
-	// 			// Avoid updating state if the component unmounted before the fetch completes
-	// 			console.log("here2");
-	// 			if (!isMounted) {
-	// 				return;
-	// 			}
-	// 			const data = response.data;
-	// 			setName(data.repository.name);
-	// 		})
-	// 		.catch((error) => {
-	// 			console.error(error);
-	// 		});
-
-	// 	// return () => {
-	// 	// 	isMounted = false;
-	// 	// };
-	// }, []);
+		setName(data.repository.name);
+	}, [data]);
 
 	return (
 		<IonPage>
